@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="slides-format" content="viewport">
+    <title>Uni Dashboard – Präsentation</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-bg: #0b1120;
+            --color-bg-deep: #060d1a;
+            --color-surface: #162032;
+            --color-text: #e2eaf7;
+            --color-text-secondary: #93afd4;
+            --color-text-muted: #5a7a9e;
+            --color-accent-1: #3B82F6;
+            --color-accent-2: #06B6D4;
+            --color-accent-3: #93C5FD;
+            --color-glass-bg: rgba(255,255,255,0.05);
+            --color-glass-border: rgba(255,255,255,0.08);
+            --color-vignette: rgba(0,0,0,0.45);
+            --font-display: 'Instrument Serif', Georgia, serif;
+            --font-body: 'Inter', sans-serif;
+        }
+    </style>
+
+    <style>
+        :root {
+            --color-bg: #0b1120;
+            --color-text: #e2eaf7;
+            --glow-color-rgb: 59, 130, 246;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            background: var(--color-bg);
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--color-text);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .deck {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--color-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .slide>.content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1100px;
+            padding: clamp(1.5rem, 4vw, 3.5rem);
+        }
+
+        .nav-controls {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 10px 24px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-btn {
+            width: 38px;
+            height: 38px;
+            border: none;
+            background: rgba(59, 130, 246, 0.15);
+            color: #3B82F6;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        .slide-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .slide-dots .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .slide-dots .dot.active {
+            background: #3B82F6;
+            transform: scale(1.3);
+        }
+
+        .slide-counter {
+            font-size: 0.78rem;
+            color: #5a7a9e;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes float-slow {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(60px, -50px) scale(1.12);
+            }
+
+            50% {
+                transform: translate(-40px, 40px) scale(0.9);
+            }
+
+            75% {
+                transform: translate(50px, 20px) scale(1.08);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        @keyframes float-drift {
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(-50px, -60px) scale(1.15) rotate(3deg);
+            }
+
+            66% {
+                transform: translate(40px, 30px) scale(0.88) rotate(-2deg);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-14px);
+            }
+        }
+
+        .gradient-mesh {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: float-slow 10s ease-in-out infinite;
+        }
+
+        .blob:nth-child(2) {
+            animation: float-drift 14s ease-in-out infinite;
+        }
+
+        .blob:nth-child(3) {
+            animation: float-slow 18s ease-in-out infinite reverse;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px 256px;
+            opacity: 0.03;
+            mix-blend-mode: overlay;
+        }
+
+        .slide::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 50%, var(--color-vignette) 100%);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.2);
+        }
+
+        .stat-glow {
+            text-shadow: 0 0 30px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.25);
+        }
+
+        @keyframes glow-pulse {
+
+            0%,
+            100% {
+                text-shadow: 0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.2);
+            }
+
+            50% {
+                text-shadow: 0 0 30px rgba(59, 130, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.3);
+            }
+        }
+
+        .glow-pulse {
+            animation: glow-pulse 3s ease-in-out infinite;
+        }
+
+        .bar-fill {
+            border-radius: 0 6px 6px 0;
+            height: 100%;
+            transition: width 0.6s ease;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+        }
+
+        @media print {
+            @page {
+                size: 13.333in 7.5in;
+                margin: 0;
+            }
+
+            html,
+            body {
+                width: 13.333in !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                background: #0b1120 !important;
+            }
+
+            .deck {
+                width: 13.333in !important;
+                height: auto !important;
+                position: static !important;
+            }
+
+            .slide {
+                position: relative !important;
+                width: 13.333in !important;
+                height: 7.5in !important;
+                opacity: 1 !important;
+                transform: none !important;
+                pointer-events: auto !important;
+                overflow: hidden !important;
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+
+            .slide:last-child {
+                page-break-after: auto !important;
+                break-after: auto !important;
+            }
+
+            .slide>.content {
+                position: relative !important;
+                z-index: 2 !important;
+            }
+
+            .reveal {
+                opacity: 1 !important;
+                transform: none !important;
+                transition: none !important;
+            }
+
+            .nav-controls,
+            .mouse-spotlight {
+                display: none !important;
+            }
+
+            canvas {
+                display: none !important;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="mouse-spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+
+    <div class="deck">
+
+        <!-- SLIDE 1: TITLE -->
+        <div class="slide slide-1 active" data-slide="1">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:520px;height:520px;top:-120px;right:-100px;background:var(--color-accent-1);opacity:0.15;">
+                </div>
+                <div class="blob"
+                    style="width:320px;height:320px;bottom:-80px;left:-60px;background:var(--color-accent-2);opacity:0.12;">
+                </div>
+                <div class="blob"
+                    style="width:220px;height:220px;top:45%;left:20%;background:var(--color-accent-3);opacity:0.09;">
+                </div>
+            </div>
+            <canvas class="particle-canvas"
+                style="position:absolute;inset:0;z-index:1;width:100%;height:100%;"></canvas>
+            <div class="content text-center">
+                <div style="font-size:110px;margin-bottom:1.5rem;animation:float 3.2s ease-in-out infinite;display:inline-block;"
+                    class="reveal">🎓</div>
+                <h1 style="font-family:'Instrument Serif',serif;font-size:clamp(2.8rem,6.5vw,5.2rem);font-weight:700;background:linear-gradient(135deg,#3B82F6 0%,#06B6D4 50%,#93C5FD 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em;margin-bottom:1rem;"
+                    class="reveal">Uni Dashboard</h1>
+                <p style="font-size:clamp(0.85rem,1.4vw,1.15rem);letter-spacing:0.3em;text-transform:uppercase;color:#5a7a9e;font-weight:500;"
+                    class="reveal">Ein interaktives Dashboard für Studierende</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: PROBLEM -->
+        <div class="slide slide-2" data-slide="2">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:400px;height:400px;top:-80px;right:-80px;background:#EF4444;opacity:0.09;"></div>
+                <div class="blob"
+                    style="width:260px;height:260px;bottom:-60px;left:-40px;background:var(--color-accent-1);opacity:0.07;">
+                </div>
+            </div>
+            <div class="content">
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:2rem;" class="reveal">
+                    <span style="font-size:1.6rem;">⚠️</span>
+                    <p
+                        style="font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:#5a7a9e;font-weight:600;">
+                        Das Problem</p>
+                </div>
+                <h2 style="font-family:'Instrument Serif',serif;font-size:clamp(2rem,4vw,3rem);font-weight:700;margin-bottom:2rem;line-height:1.2;"
+                    class="reveal">Zu viele Systeme –<br><span
+                        style="background:linear-gradient(135deg,#EF4444,#F97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">kein
+                        Überblick</span></h2>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;">
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #EF4444;border-radius:12px;padding:1.5rem;"
+                        class="reveal">
+                        <div style="font-size:1.8rem;margin-bottom:0.75rem;">🖥️</div>
+                        <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:0.5rem;color:#e2eaf7;">Parallele
+                            Systeme</h4>
+                        <p style="font-size:0.82rem;color:#93afd4;line-height:1.5;">Moodle, LSF und E-Mail müssen
+                            separat überprüft werden – täglich, manuell.</p>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #F97316;border-radius:12px;padding:1.5rem;"
+                        class="reveal">
+                        <div style="font-size:1.8rem;margin-bottom:0.75rem;">📋</div>
+                        <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:0.5rem;color:#e2eaf7;">Kein zentraler
+                            Überblick</h4>
+                        <p style="font-size:0.82rem;color:#93afd4;line-height:1.5;">Punkte, Deadlines und
+                            Prüfungstermine sind verteilt und schwer zu finden.</p>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #FBBF24;border-radius:12px;padding:1.5rem;"
+                        class="reveal">
+                        <div style="font-size:1.8rem;margin-bottom:0.75rem;">⏳</div>
+                        <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:0.5rem;color:#e2eaf7;">Zusätzlicher
+                            Aufwand</h4>
+                        <p style="font-size:0.82rem;color:#93afd4;line-height:1.5;">Organisatorischer Mehraufwand
+                            belastet besonders vulnerable Studierendengruppen.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: GESELLSCHAFTLICHE RELEVANZ -->
+        <div class="slide slide-3" data-slide="3">
+            <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:1.5rem;align-items:stretch;">
+
+            <!-- Main focus card -->
+            <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #06B6D4;border-radius:14px;padding:1.8rem;"
+                class="reveal">
+                <div style="font-size:2.3rem;margin-bottom:0.8rem;">👥</div>
+
+                <h4 style="font-size:1.05rem;font-weight:700;margin-bottom:0.7rem;color:#e2eaf7;">
+                    Mehr Studierende 50+
+                </h4>
+
+                <p style="font-size:0.86rem;color:#93afd4;line-height:1.6;margin-bottom:1rem;">
+                    Durch den demografischen Wandel und lebenslanges Lernen nehmen auch ältere Studierende häufiger an
+                    Hochschulangeboten teil. Für sie können viele parallele digitale Systeme wie Moodle, LSF und E-Mail
+                    schnell unübersichtlich werden.
+                </p>
+
+                <p style="font-size:0.86rem;color:#93afd4;line-height:1.6;margin:0;">
+                    Ein zentrales Dashboard reduziert diese digitale Überforderung, weil wichtige Informationen klar,
+                    visuell und an einem Ort dargestellt werden.
+                </p>
+            </div>
+
+            <!-- Supporting points -->
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.2rem;"
+                    class="reveal">
+                    <div style="font-size:1.8rem;margin-bottom:0.55rem;">🧭</div>
+                    <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:0.4rem;color:#e2eaf7;">
+                        Orientierung
+                    </h4>
+                    <p style="font-size:0.8rem;color:#93afd4;line-height:1.5;margin:0;">
+                        Termine, Aufgaben und Prüfungen werden übersichtlich gebündelt.
+                    </p>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.2rem;"
+                    class="reveal">
+                    <div style="font-size:1.8rem;margin-bottom:0.55rem;">💡</div>
+                    <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:0.4rem;color:#e2eaf7;">
+                        Weniger digitale Hürden
+                    </h4>
+                    <p style="font-size:0.8rem;color:#93afd4;line-height:1.5;margin:0;">
+                        Eine klare Oberfläche hilft, Informationen schneller zu finden.
+                    </p>
+                </div>
+
+                <div style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);border-radius:14px;padding:1.2rem;display:flex;align-items:center;"
+                    class="reveal">
+                    <p style="font-size:0.95rem;font-style:italic;color:#93C5FD;line-height:1.55;margin:0;">
+                        "Studienorganisation soll auch für ältere Studierende einfach und verständlich bleiben."
+                    </p>
+                </div>
+
+            </div>
+        
+            </div>
+        </div>
+        <!-- SLIDE 4: UNSERE IDEE -->
+        <div class="slide slide-4" data-slide="4">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:500px;height:500px;top:-100px;right:-100px;background:var(--color-accent-1);opacity:0.12;">
+                </div>
+                <div class="blob"
+                    style="width:300px;height:300px;bottom:-80px;left:-60px;background:var(--color-accent-2);opacity:0.1;">
+                </div>
+            </div>
+            <div class="content">
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;" class="reveal">
+                    <span style="font-size:1.6rem;">💡</span>
+                    <p
+                        style="font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:#5a7a9e;font-weight:600;">
+                        Unsere Idee</p>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:2.5rem;align-items:center;">
+                    <div>
+                        <h2 style="font-family:'Instrument Serif',serif;font-size:clamp(1.8rem,3.8vw,2.8rem);font-weight:700;margin-bottom:1.25rem;line-height:1.2;"
+                            class="reveal">Ein Dashboard –<br><span
+                                style="background:linear-gradient(135deg,#3B82F6,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">alles
+                                auf einen Blick</span></h2>
+                        <p style="font-size:0.95rem;color:#93afd4;line-height:1.7;margin-bottom:1.25rem;"
+                            class="reveal">Ein <strong style="color:#e2eaf7;">webbasiertes und interaktives
+                                Dashboard</strong>, das alle relevanten Informationen an einem Ort bündelt.</p>
+                        <p style="font-size:0.95rem;color:#93afd4;line-height:1.7;margin-bottom:1.5rem;" class="reveal">
+                            Nach dem Login erhält der Studierende eine <strong style="color:#e2eaf7;">personalisierte
+                                Übersicht</strong> über seinen Studienalltag – priorisiert und sofort verständlich.</p>
+                        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;" class="reveal">
+                            <span
+                                style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);border-radius:20px;padding:0.35rem 1rem;font-size:0.8rem;color:#93C5FD;">🌐
+                                Webbasiert</span>
+                            <span
+                                style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);border-radius:20px;padding:0.35rem 1rem;font-size:0.8rem;color:#67E8F9;">⚡
+                                Interaktiv</span>
+                            <span
+                                style="background:rgba(147,197,253,0.12);border:1px solid rgba(147,197,253,0.25);border-radius:20px;padding:0.35rem 1rem;font-size:0.8rem;color:#BAE6FD;">🔒
+                                Personalisiert</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:1rem;" class="reveal">
+                        <div
+                            style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.2rem;display:flex;align-items:center;gap:1rem;">
+                            <span style="font-size:1.6rem;">📅</span>
+                            <div>
+                                <p style="font-size:0.85rem;font-weight:600;margin:0;">Moodle</p>
+                                <p style="font-size:0.75rem;color:#5a7a9e;margin:0;">Aufgaben & Kurse</p>
+                            </div>
+                        </div>
+                        <div style="text-align:center;font-size:1.3rem;color:#5a7a9e;">+</div>
+                        <div
+                            style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.2rem;display:flex;align-items:center;gap:1rem;">
+                            <span style="font-size:1.6rem;">🏫</span>
+                            <div>
+                                <p style="font-size:0.85rem;font-weight:600;margin:0;">LSF</p>
+                                <p style="font-size:0.75rem;color:#5a7a9e;margin:0;">Stundenplan & Prüfungen</p>
+                            </div>
+                        </div>
+                        <div style="text-align:center;font-size:1.3rem;color:#5a7a9e;">+</div>
+                        <div
+                            style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.2rem;display:flex;align-items:center;gap:1rem;">
+                            <span style="font-size:1.6rem;">📧</span>
+                            <div>
+                                <p style="font-size:0.85rem;font-weight:600;margin:0;">E-Mail</p>
+                                <p style="font-size:0.75rem;color:#5a7a9e;margin:0;">Mitteilungen & Events</p>
+                            </div>
+                        </div>
+                        <div style="text-align:center;font-size:1.3rem;color:#3B82F6;font-weight:700;">↓</div>
+                        <div
+                            style="background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(6,182,212,0.15));border:1px solid rgba(59,130,246,0.35);border-radius:12px;padding:1.2rem;text-align:center;">
+                            <span style="font-size:1.5rem;">🎓</span>
+                            <p style="font-size:0.9rem;font-weight:700;color:#93C5FD;margin:0.25rem 0 0;">Uni Dashboard
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: BENUTZEROBERFLÄCHE -->
+        <div class="slide slide-5" data-slide="5">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:380px;height:380px;top:-80px;left:-60px;background:var(--color-accent-2);opacity:0.09;">
+                </div>
+                <div class="blob"
+                    style="width:280px;height:280px;bottom:-60px;right:-40px;background:var(--color-accent-1);opacity:0.08;">
+                </div>
+            </div>
+            <div class="content">
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;" class="reveal">
+                    <span style="font-size:1.6rem;">🖥️</span>
+                    <p
+                        style="font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:#5a7a9e;font-weight:600;">
+                        Benutzeroberfläche</p>
+                </div>
+                <h2 style="font-family:'Instrument Serif',serif;font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;margin-bottom:2rem;"
+                    class="reveal">Dashboard-Karten <span
+                        style="background:linear-gradient(135deg,#3B82F6,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">mit
+                        Priorität</span></h2>
+
+                <!-- Summary bar -->
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;"
+                    class="reveal">
+                    <div
+                        style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);border-radius:12px;padding:1.1rem;text-align:center;">
+                        <div style="font-size:1.6rem;">📅</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#3B82F6;" data-count="3">0</div>
+                        <div style="font-size:0.75rem;color:#5a7a9e;text-transform:uppercase;letter-spacing:0.1em;">
+                            Termine heute</div>
+                    </div>
+                    <div
+                        style="background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.25);border-radius:12px;padding:1.1rem;text-align:center;">
+                        <div style="font-size:1.6rem;">✅</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#06B6D4;" data-count="5">0</div>
+                        <div style="font-size:0.75rem;color:#5a7a9e;text-transform:uppercase;letter-spacing:0.1em;">
+                            Aufgaben offen</div>
+                    </div>
+                    <div
+                        style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.22);border-radius:12px;padding:1.1rem;text-align:center;">
+                        <div style="font-size:1.6rem;">🎓</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#F87171;" data-count="2">0</div>
+                        <div style="font-size:0.75rem;color:#5a7a9e;text-transform:uppercase;letter-spacing:0.1em;">
+                            Prüfungen bald</div>
+                    </div>
+                    <div
+                        style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.22);border-radius:12px;padding:1.1rem;text-align:center;">
+                        <div style="font-size:1.6rem;">🎉</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#FBBF24;" data-count="4">0</div>
+                        <div style="font-size:0.75rem;color:#5a7a9e;text-transform:uppercase;letter-spacing:0.1em;">
+                            Events diese Woche</div>
+                    </div>
+                </div>
+
+                <!-- Main sections preview -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" class="reveal">
+                    <div
+                        style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1.1rem;">
+                        <p
+                            style="font-size:0.78rem;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.6rem;">
+                            🗓 Heutiger Stundenplan</p>
+                        <div style="display:flex;flex-direction:column;gap:0.4rem;">
+                            <div
+                                style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.4rem 0.6rem;background:rgba(255,255,255,0.04);border-radius:6px;">
+                                <span>09:15 – 10:45 · Software Engineering</span><span style="color:#5a7a9e;">H-Saal
+                                    2</span>
+                            </div>
+                            <div
+                                style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.4rem 0.6rem;background:rgba(255,255,255,0.04);border-radius:6px;">
+                                <span>11:00 – 12:30 · Datenbanken</span><span style="color:#5a7a9e;">R 1.05</span>
+                            </div>
+                            <div
+                                style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.4rem 0.6rem;background:rgba(255,255,255,0.04);border-radius:6px;">
+                                <span>14:00 – 15:30 · Web Technologien</span><span style="color:#5a7a9e;">R 2.10</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1.1rem;">
+                        <p
+                            style="font-size:0.78rem;font-weight:700;color:#F87171;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.6rem;">
+                            📝 Offene Aufgaben</p>
+                        <div style="display:flex;flex-direction:column;gap:0.4rem;">
+                            <div
+                                style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.4rem 0.6rem;background:rgba(255,255,255,0.04);border-radius:6px;">
+                                <span>□ Übungsblatt 6 · Datenbanken</span><span style="color:#FBBF24;">16.05.</span>
+                            </div>
+                            <div
+                                style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.4rem 0.6rem;background:rgba(255,255,255,0.04);border-radius:6px;">
+                                <span>□ Projektabgabe · SE</span><span style="color:#FBBF24;">20.05.</span>
+                            </div>
+                            <div
+                                style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.4rem 0.6rem;background:rgba(255,255,255,0.04);border-radius:6px;">
+                                <span>□ Essay · Wiss. Arbeiten</span><span style="color:#F87171;">27.05.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: KERNFUNKTIONEN -->
+        <div class="slide slide-6" data-slide="6">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:420px;height:420px;top:-100px;right:-80px;background:var(--color-accent-1);opacity:0.1;">
+                </div>
+                <div class="blob"
+                    style="width:260px;height:260px;bottom:-60px;left:-40px;background:var(--color-accent-2);opacity:0.08;">
+                </div>
+            </div>
+            <div class="content">
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;" class="reveal">
+                    <span style="font-size:1.6rem;">⚙️</span>
+                    <p
+                        style="font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:#5a7a9e;font-weight:600;">
+                        Kernfunktionen</p>
+                </div>
+                <h2 style="font-family:'Instrument Serif',serif;font-size:clamp(1.7rem,3.2vw,2.5rem);font-weight:700;margin-bottom:1.75rem;"
+                    class="reveal">Alles, was Studierende <span
+                        style="background:linear-gradient(135deg,#3B82F6,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">täglich
+                        brauchen</span></h2>
+
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;">
+                    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.3rem;transition:transform 0.2s,box-shadow 0.2s;"
+                        class="reveal"
+                        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 30px rgba(59,130,246,0.15)'"
+                        onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <span class="feature-icon">🗓</span>
+                        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:0.4rem;color:#e2eaf7;">Stundenplan
+                        </h4>
+                        <p style="font-size:0.78rem;color:#93afd4;line-height:1.5;">Veranstaltungen mit Zeit und Raum
+                            auf einen Blick</p>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.3rem;transition:transform 0.2s,box-shadow 0.2s;"
+                        class="reveal"
+                        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 30px rgba(239,68,68,0.15)'"
+                        onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <span class="feature-icon">📝</span>
+                        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:0.4rem;color:#e2eaf7;">Prüfungen</h4>
+                        <p style="font-size:0.78rem;color:#93afd4;line-height:1.5;">Anstehende Prüfungen sortiert nach
+                            Datum</p>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.3rem;transition:transform 0.2s,box-shadow 0.2s;"
+                        class="reveal"
+                        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 30px rgba(6,182,212,0.15)'"
+                        onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <span class="feature-icon">✅</span>
+                        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:0.4rem;color:#e2eaf7;">Aufgaben</h4>
+                        <p style="font-size:0.78rem;color:#93afd4;line-height:1.5;">Offene Aufgaben, Deadlines und
+                            Bearbeitungsstatus</p>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.3rem;transition:transform 0.2s,box-shadow 0.2s;"
+                        class="reveal"
+                        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 30px rgba(251,191,36,0.15)'"
+                        onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <span class="feature-icon">📊</span>
+                        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:0.4rem;color:#e2eaf7;">Punkte &
+                            Zulassung</h4>
+                        <p style="font-size:0.78rem;color:#93afd4;line-height:1.5;">Erreichte Punkte und
+                            Prüfungszulassungsübersicht</p>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.3rem;transition:transform 0.2s,box-shadow 0.2s;"
+                        class="reveal"
+                        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 30px rgba(147,197,253,0.15)'"
+                        onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <span class="feature-icon">📚</span>
+                        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:0.4rem;color:#e2eaf7;">Module</h4>
+                        <p style="font-size:0.78rem;color:#93afd4;line-height:1.5;">Überblick über belegte Fächer und
+                            Kreditpunkte</p>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.3rem;transition:transform 0.2s,box-shadow 0.2s;"
+                        class="reveal"
+                        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 30px rgba(59,130,246,0.15)'"
+                        onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <span class="feature-icon">🎉</span>
+                        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:0.4rem;color:#e2eaf7;">Events</h4>
+                        <p style="font-size:0.78rem;color:#93afd4;line-height:1.5;">Aktuelle Campus-Veranstaltungen</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: NUTZEN -->
+        <div class="slide slide-7" data-slide="7">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:460px;height:460px;top:-100px;left:-80px;background:var(--color-accent-1);opacity:0.11;">
+                </div>
+                <div class="blob"
+                    style="width:300px;height:300px;bottom:-60px;right:-50px;background:var(--color-accent-2);opacity:0.09;">
+                </div>
+            </div>
+            <canvas class="particle-canvas-ambient"
+                style="position:absolute;inset:0;z-index:1;width:100%;height:100%;"></canvas>
+            <div class="content">
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;" class="reveal">
+                    <span style="font-size:1.6rem;">🚀</span>
+                    <p
+                        style="font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:#5a7a9e;font-weight:600;">
+                        Nutzen</p>
+                </div>
+                <h2 style="font-family:'Instrument Serif',serif;font-size:clamp(1.8rem,3.8vw,2.8rem);font-weight:700;margin-bottom:2rem;"
+                    class="reveal">Was das Dashboard <span
+                        style="background:linear-gradient(135deg,#3B82F6,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">verbessert</span>
+                </h2>
+
+                <div style="display:flex;flex-direction:column;gap:1rem;">
+                    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-left:4px solid #3B82F6;border-radius:12px;padding:1.4rem;display:flex;align-items:center;gap:1.5rem;"
+                        class="reveal">
+                        <span style="font-size:2.2rem;flex-shrink:0;">📅</span>
+                        <div>
+                            <h4 style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;color:#e2eaf7;">Einfachere
+                                Planung</h4>
+                            <p style="font-size:0.83rem;color:#93afd4;line-height:1.5;">Alle wichtigen Informationen
+                                sofort verfügbar – kein manuelles Nachschauen in mehreren Systemen.</p>
+                        </div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-left:4px solid #06B6D4;border-radius:12px;padding:1.4rem;display:flex;align-items:center;gap:1.5rem;"
+                        class="reveal">
+                        <span style="font-size:2.2rem;flex-shrink:0;">⏰</span>
+                        <div>
+                            <h4 style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;color:#e2eaf7;">Weniger
+                                verpasste Deadlines</h4>
+                            <p style="font-size:0.83rem;color:#93afd4;line-height:1.5;">Priorisierte Anzeige von
+                                baldigen Prüfungen und Aufgaben direkt auf der Startseite.</p>
+                        </div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-left:4px solid #93C5FD;border-radius:12px;padding:1.4rem;display:flex;align-items:center;gap:1.5rem;"
+                        class="reveal">
+                        <span style="font-size:2.2rem;flex-shrink:0;">🌟</span>
+                        <div>
+                            <h4 style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;color:#e2eaf7;">Mehr
+                                Bildungsgerechtigkeit</h4>
+                            <p style="font-size:0.83rem;color:#93afd4;line-height:1.5;">Studierende in unterschiedlichen
+                                Lebenssituationen werden gleichwertig unterstützt.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: TECHNOLOGIE -->
+        <div class="slide slide-8" data-slide="8">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:420px;height:420px;top:-90px;right:-70px;background:#61DAFB;opacity:0.1;"></div>
+                <div class="blob"
+                    style="width:280px;height:280px;bottom:-60px;left:-50px;background:var(--color-accent-1);opacity:0.08;">
+                </div>
+            </div>
+            <div class="content">
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;" class="reveal">
+                    <span style="font-size:1.6rem;">🛠️</span>
+                    <p
+                        style="font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:#5a7a9e;font-weight:600;">
+                        Technologie</p>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center;">
+                    <div>
+                        <h2 style="font-family:'Instrument Serif',serif;font-size:clamp(1.8rem,3.8vw,2.8rem);font-weight:700;margin-bottom:1.25rem;"
+                            class="reveal">Tech-Stack &<br><span
+                                style="background:linear-gradient(135deg,#61DAFB,#3B82F6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Demo-Ansatz</span>
+                        </h2>
+                        <p style="font-size:0.92rem;color:#93afd4;line-height:1.7;margin-bottom:1.25rem;"
+                            class="reveal">Die Umsetzung erfolgt mit <strong style="color:#61DAFB;">React</strong> als
+                            Frontend-Technologie – modern, komponentenbasiert und schnell.</p>
+                        <p style="font-size:0.92rem;color:#93afd4;line-height:1.7;" class="reveal">Für die Demo-Version
+                            werden <strong style="color:#e2eaf7;">lokale Beispieldaten</strong> verwendet, um alle
+                            Kernfunktionen und Interaktionen zeigen zu können – ohne direkte Anbindung an Moodle oder
+                            LSF.</p>
+                    </div>
+
+                    <div style="display:flex;flex-direction:column;gap:1rem;">
+                        <div style="background:rgba(97,218,251,0.1);border:1px solid rgba(97,218,251,0.25);border-radius:14px;padding:1.4rem;display:flex;align-items:center;gap:1.2rem;"
+                            class="reveal">
+                            <span style="font-size:2.4rem;">⚛️</span>
+                            <div>
+                                <p style="font-size:1rem;font-weight:700;color:#61DAFB;margin:0;">React</p>
+                                <p style="font-size:0.78rem;color:#5a7a9e;margin:0.2rem 0 0;">Frontend Framework</p>
+                            </div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.4rem;display:flex;align-items:center;gap:1.2rem;"
+                            class="reveal">
+                            <span style="font-size:2.4rem;">🗃️</span>
+                            <div>
+                                <p style="font-size:1rem;font-weight:700;color:#e2eaf7;margin:0;">Lokale Beispieldaten
+                                </p>
+                                <p style="font-size:0.78rem;color:#5a7a9e;margin:0.2rem 0 0;">JSON / Mock-Daten für Demo
+                                </p>
+                            </div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.4rem;display:flex;align-items:center;gap:1.2rem;"
+                            class="reveal">
+                            <span style="font-size:2.4rem;">🔗</span>
+                            <div>
+                                <p style="font-size:1rem;font-weight:700;color:#e2eaf7;margin:0;">Erweiterbar</p>
+                                <p style="font-size:0.78rem;color:#5a7a9e;margin:0.2rem 0 0;">Anbindung an Moodle / LSF
+                                    möglich</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 9: ARBEITSPLAN -->
+        <div class="slide slide-9" data-slide="9">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:380px;height:380px;top:-80px;left:-60px;background:var(--color-accent-2);opacity:0.09;">
+                </div>
+                <div class="blob"
+                    style="width:280px;height:280px;bottom:-60px;right:-40px;background:var(--color-accent-1);opacity:0.08;">
+                </div>
+            </div>
+
+            <div class="content" style="max-width:1150px;padding:2rem 3rem;">
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.9rem;" class="reveal">
+                    <span style="font-size:1.5rem;">📅</span>
+                    <p
+                        style="font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:#5a7a9e;font-weight:600;">
+                        Projektplanung
+                    </p>
+                </div>
+
+                <h2 style="font-family:'Instrument Serif',serif;font-size:clamp(1.6rem,3vw,2.25rem);font-weight:700;margin-bottom:1.1rem;"
+                    class="reveal">
+                    Arbeitsplan <span
+                        style="background:linear-gradient(135deg,#3B82F6,#06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+                        nach Datum
+                    </span>
+                </h2>
+
+                <div class="reveal" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;">
+
+                    <!-- 07.05 -->
+                    <div
+                        style="background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #FBBF24;border-radius:12px;padding:0.8rem;">
+                        <div
+                            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+                            <span style="font-size:0.82rem;font-weight:800;color:#93C5FD;">07.05.2026</span>
+                            <span style="font-size:0.68rem;color:#FBBF24;font-weight:700;">In Arbeit</span>
+                        </div>
+                        <p style="font-size:0.78rem;font-weight:700;margin:0 0 0.35rem;color:#e2eaf7;">
+                            Projektstart
+                        </p>
+                        <p style="font-size:0.72rem;color:#93afd4;line-height:1.35;margin:0;">
+                            Projektidee finalisieren und gesellschaftliche Relevanz ausarbeiten, z. B. Studierende 50+
+                            und digitale Überforderung.
+                        </p>
+                    </div>
+
+                    <!-- 14.05 -->
+                    <div
+                        style="background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #60A5FA;border-radius:12px;padding:0.8rem;">
+                        <div
+                            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+                            <span style="font-size:0.82rem;font-weight:800;color:#93C5FD;">14.05.2026</span>
+                            <span style="font-size:0.68rem;color:#60A5FA;font-weight:700;">Geplant</span>
+                        </div>
+                        <p style="font-size:0.78rem;font-weight:700;margin:0 0 0.35rem;color:#e2eaf7;">
+                            Analysephase
+                        </p>
+                        <p style="font-size:0.72rem;color:#93afd4;line-height:1.35;margin:0;">
+                            Personas bilden, mögliche Interviews/Umfragen planen und Rollen im Team verteilen.
+                        </p>
+                    </div>
+
+                    <!-- 21.05 -->
+                    <div
+                        style="background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #60A5FA;border-radius:12px;padding:0.8rem;">
+                        <div
+                            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+                            <span style="font-size:0.82rem;font-weight:800;color:#93C5FD;">21.05.2026</span>
+                            <span style="font-size:0.68rem;color:#60A5FA;font-weight:700;">Geplant</span>
+                        </div>
+                        <p style="font-size:0.78rem;font-weight:700;margin:0 0 0.35rem;color:#e2eaf7;">
+                            Anforderungen
+                        </p>
+                        <p style="font-size:0.72rem;color:#93afd4;line-height:1.35;margin:0;">
+                            Funktionale und nicht-funktionale Anforderungen festlegen sowie Schnittstellen zu Moodle,
+                            Uni-Mail und LSF definieren.
+                        </p>
+                    </div>
+
+                    <!-- 27.05 -->
+                    <div
+                        style="background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #60A5FA;border-radius:12px;padding:0.8rem;">
+                        <div
+                            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+                            <span style="font-size:0.82rem;font-weight:800;color:#93C5FD;">27.05.2026</span>
+                            <span style="font-size:0.68rem;color:#60A5FA;font-weight:700;">Geplant</span>
+                        </div>
+                        <p style="font-size:0.78rem;font-weight:700;margin:0 0 0.35rem;color:#e2eaf7;">
+                            Zwischenpräsentation
+                        </p>
+                        <p style="font-size:0.72rem;color:#93afd4;line-height:1.35;margin:0;">
+                            Erste Gestaltungsentwürfe, Skizzen und Wireframes vorbereiten und Präsentation finalisieren.
+                        </p>
+                    </div>
+
+                    <!-- Ende Juni -->
+                    <div
+                        style="background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #60A5FA;border-radius:12px;padding:0.8rem;">
+                        <div
+                            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+                            <span style="font-size:0.82rem;font-weight:800;color:#93C5FD;">Bis Ende Juni</span>
+                            <span style="font-size:0.68rem;color:#60A5FA;font-weight:700;">Geplant</span>
+                        </div>
+                        <p style="font-size:0.78rem;font-weight:700;margin:0 0 0.35rem;color:#e2eaf7;">
+                            Design & Prototyp
+                        </p>
+                        <p style="font-size:0.72rem;color:#93afd4;line-height:1.35;margin:0;">
+                            Designentscheidungen treffen und einen klickbaren bzw. demonstrierbaren Prototyp erstellen.
+                        </p>
+                    </div>
+
+                    <!-- Abschluss -->
+                    <div
+                        style="background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.08);border-left:4px solid #60A5FA;border-radius:12px;padding:0.8rem;">
+                        <div
+                            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;">
+                            <span style="font-size:0.82rem;font-weight:800;color:#93C5FD;">Abschlussphase</span>
+                            <span style="font-size:0.68rem;color:#60A5FA;font-weight:700;">Geplant</span>
+                        </div>
+                        <p style="font-size:0.78rem;font-weight:700;margin:0 0 0.35rem;color:#e2eaf7;">
+                            Tests & Evaluation
+                        </p>
+                        <p style="font-size:0.72rem;color:#93afd4;line-height:1.35;margin:0;">
+                            Usability-Tests durchführen, Ergebnisse auswerten, Anpassungen vornehmen und
+                            Abschlusspräsentation vorbereiten.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 10: CLOSING -->
+        <div class="slide slide-10" data-slide="10">
+            <div class="gradient-mesh">
+                <div class="blob"
+                    style="width:520px;height:520px;top:-120px;right:-100px;background:var(--color-accent-1);opacity:0.15;">
+                </div>
+                <div class="blob"
+                    style="width:350px;height:350px;bottom:-90px;left:-70px;background:var(--color-accent-2);opacity:0.12;">
+                </div>
+                <div class="blob"
+                    style="width:220px;height:220px;top:40%;left:25%;background:var(--color-accent-3);opacity:0.09;">
+                </div>
+            </div>
+            <canvas class="particle-canvas"
+                style="position:absolute;inset:0;z-index:1;width:100%;height:100%;"></canvas>
+            <div class="content text-center">
+                <div style="font-size:100px;margin-bottom:1.2rem;animation:float 3.5s ease-in-out infinite;display:inline-block;"
+                    class="reveal">🎓</div>
+                <h2 style="font-family:'Instrument Serif',serif;font-size:clamp(2.5rem,5.5vw,4.5rem);font-weight:700;background:linear-gradient(135deg,#3B82F6 0%,#06B6D4 50%,#93C5FD 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1rem;"
+                    class="reveal">Vielen Dank!</h2>
+                <p style="font-size:clamp(0.85rem,1.4vw,1.1rem);color:#93afd4;margin-bottom:2rem;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.7;"
+                    class="reveal">Uni Dashboard – Alle Informationen, ein Ort, ein Login.<br>Für Studierende, die mehr
+                    aus ihrer Zeit machen möchten.</p>
+                <div style="display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;" class="reveal">
+                    <span
+                        style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);border-radius:20px;padding:0.5rem 1.25rem;font-size:0.85rem;color:#93C5FD;">🌐
+                        Webbasiert</span>
+                    <span
+                        style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);border-radius:20px;padding:0.5rem 1.25rem;font-size:0.85rem;color:#67E8F9;">⚛️
+                        React</span>
+                    <span
+                        style="background:rgba(147,197,253,0.12);border:1px solid rgba(147,197,253,0.25);border-radius:20px;padding:0.5rem 1.25rem;font-size:0.85rem;color:#BAE6FD;">💡
+                        Open Source Ready</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="nav-controls">
+        <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+        <div class="slide-dots" id="dots"></div>
+        <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+        <span class="slide-counter" id="counter">1 / 9</span>
+    </div>
+
+    <script>
+        let current = 1;
+        const total = document.querySelectorAll('.slide').length;
+        const dotsContainer = document.getElementById('dots');
+        const counter = document.getElementById('counter');
+        for (let i = 1; i <= total; i++) { const dot = document.createElement('div'); dot.className = 'dot' + (i === 1 ? ' active' : ''); dot.onclick = () => goToSlide(i); dotsContainer.appendChild(dot); }
+
+        function goToSlide(n) {
+            const prev = document.querySelector('.slide.active');
+            const next = document.querySelector(`.slide[data-slide="${n}"]`);
+            if (prev) prev.classList.remove('active');
+            if (next) { next.classList.add('active'); animateSlide(next); }
+            current = n; updateNav();
+        }
+        function changeSlide(dir) { let next = current + dir; if (next < 1) next = total; if (next > total) next = 1; goToSlide(next); }
+        function updateNav() { document.querySelectorAll('.dot').forEach((d, i) => { d.classList.toggle('active', i + 1 === current); }); counter.textContent = current + ' / ' + total; }
+        document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(-1); } });
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+        document.addEventListener('touchend', (e) => { const diff = touchStartX - e.changedTouches[0].clientX; if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1); });
+
+        function animateSlide(slide) {
+            slide.querySelectorAll('.reveal').forEach((el, i) => {
+                el.style.transition = 'none'; el.style.opacity = '0'; el.style.transform = 'translateY(20px)';
+                el.offsetHeight;
+                const delay = i * 0.08;
+                el.style.transition = `opacity 0.35s ease ${delay}s, transform 0.35s ease ${delay}s`;
+                el.style.opacity = '1'; el.style.transform = 'translateY(0px)';
+            });
+            animateSlideEffects(slide);
+        }
+
+        function animateSlideEffects(slide) {
+            slide.querySelectorAll('[data-count]:not(.counted)').forEach(el => {
+                el.classList.add('counted');
+                const target = parseInt(el.dataset.count);
+                const suffix = el.dataset.suffix || '', prefix = el.dataset.prefix || '';
+                let cur = 0; const step = target / 40;
+                const timer = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(timer); } el.textContent = prefix + Math.round(cur).toLocaleString() + suffix; }, 30);
+            });
+            slide.querySelectorAll('.bar-fill:not(.fill-init)').forEach((bar, i) => {
+                bar.classList.add('fill-init');
+                bar.style.width = '0%'; bar.style.transition = `width 0.5s ease ${i * 0.08}s`; bar.offsetHeight; bar.style.width = bar.dataset.width + '%';
+            });
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            const spotlight = document.querySelector('.mouse-spotlight');
+            if (spotlight) { spotlight.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(59,130,246,0.06), transparent 40%)`; }
+        });
+
+        window.initParticles = function (canvas, options) {
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth || window.innerWidth; canvas.height = canvas.offsetHeight || window.innerHeight;
+            const interactive = options.interactive !== false;
+            const count = options.count || (interactive ? 55 : 18);
+            let mx = -1000, my = -1000;
+            const particles = Array.from({ length: count }, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, size: Math.random() * 2.5 + 0.8, alpha: Math.random() * 0.3 + 0.08 }));
+            if (interactive) { canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); mx = e.clientX - rect.left; my = e.clientY - rect.top; }); canvas.addEventListener('mouseleave', () => { mx = -1000; my = -1000; }); }
+            (function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    if (interactive) { const dx = p.x - mx, dy = p.y - my, dist = Math.sqrt(dx * dx + dy * dy); if (dist < 120) { const force = (120 - dist) / 120 * 2; p.vx += (dx / dist) * force * 0.1; p.vy += (dy / dist) * force * 0.1; } }
+                    p.vx *= 0.98; p.vy *= 0.98; p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0; if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fillStyle = `rgba(59,130,246,${p.alpha})`; ctx.fill();
+                });
+                requestAnimationFrame(animate);
+            })();
+        };
+        document.querySelectorAll('.particle-canvas').forEach(c => window.initParticles(c, { interactive: true, count: 55 }));
+        document.querySelectorAll('.particle-canvas-ambient').forEach(c => window.initParticles(c, { interactive: false, count: 18 }));
+
+        try { animateSlide(document.querySelector('.slide.active')); } catch (e) { console.warn('Initial animation error:', e); }
+    </script>
+</body>
+
+</html>
